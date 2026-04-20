@@ -1,0 +1,182 @@
+### Exemplos de requisições HTTP para testar o backend
+
+# Variáveis
+@host = http://localhost:3001
+
+### Health Check
+GET {{host}}/health
+Accept: application/json
+
+### Chat Health (verifica Ollama)
+GET {{host}}/api/chat/health
+Accept: application/json
+
+### Chat - Simples
+POST {{host}}/api/chat
+Content-Type: application/json
+
+{
+  "message": "Olá! Como você está?"
+}
+
+### Chat - Com histórico
+POST {{host}}/api/chat
+Content-Type: application/json
+
+{
+  "message": "E qual é o seu nome?",
+  "history": [
+    {
+      "role": "user",
+      "content": "Olá! Como você está?"
+    },
+    {
+      "role": "assistant",
+      "content": "Olá! Estou bem, obrigado por perguntar. Como posso ajudá-lo?"
+    }
+  ]
+}
+
+### Chat - Pergunta complexa
+POST {{host}}/api/chat
+Content-Type: application/json
+
+{
+  "message": "Explique de forma simples como funciona machine learning"
+}
+
+### Chat - Pergunta sobre Faturamento (com contexto automático)
+POST {{host}}/api/chat
+Content-Type: application/json
+
+{
+  "message": "Qual foi o total de faturamento de hoje?"
+}
+
+### Chat - Pergunta sobre Faturamento (desabilitando contexto)
+POST {{host}}/api/chat
+Content-Type: application/json
+
+{
+  "message": "Qual foi o total de faturamento?",
+  "includeBillingContext": false
+}
+
+### Chat - Stream (SSE)
+POST {{host}}/api/chat/stream
+Content-Type: application/json
+
+{
+  "message": "Conte uma história curta sobre um robô"
+}
+
+### Chat - Mensagem inválida (deve retornar erro)
+POST {{host}}/api/chat
+Content-Type: application/json
+
+{
+  "message": ""
+}
+
+### Chat - Histórico inválido
+POST {{host}}/api/chat
+Content-Type: application/json
+
+{
+  "message": "Teste",
+  "history": "não é um array"
+}
+
+### Billing - Resumo de Faturamento
+GET {{host}}/api/billing/resumo-faturamento?data=2024-01-01
+Accept: application/json
+
+### Billing - Resumo Total de Faturamento
+GET {{host}}/api/billing/resumo-faturamento-total?data=2024-01-01
+Accept: application/json
+
+### Billing - Query Direta sobre Faturamento
+POST {{host}}/api/billing/query
+Content-Type: application/json
+
+{
+  "question": "Quanto faturamos hoje?",
+  "type": "resume"
+}
+
+### Billing - Query Total
+POST {{host}}/api/billing/query
+Content-Type: application/json
+
+{
+  "question": "Qual o total de faturamento?",
+  "date": "2024-01-01",
+  "type": "total"
+}
+
+### Billing - Verificar se é pergunta sobre faturamento
+POST {{host}}/api/billing/check-question
+Content-Type: application/json
+
+{
+  "message": "Quanto vendemos este mês?"
+}
+
+### ========== CHATBOT MODULAR (NOVO) ==========
+
+### Processar mensagem com intenção
+POST http://localhost:3001/api/chatbot/process
+Content-Type: application/json
+
+{
+  "message": "Quanto faturamos esta semana?"
+}
+
+### Analisar intenção
+POST http://localhost:3001/api/chatbot/analyze-intent
+Content-Type: application/json
+
+{
+  "message": "Qual a margem de lucro de hoje?"
+}
+
+### Chat genérico (modular)
+POST http://localhost:3001/api/chatbot/chat
+Content-Type: application/json
+
+{
+  "message": "Olá, como você está?",
+  "history": []
+}
+
+### Chat com contexto de faturamento
+POST http://localhost:3001/api/chatbot/process
+Content-Type: application/json
+
+{
+  "message": "Me mostre o faturamento de ontem"
+}
+
+### Chat com período específico
+POST http://localhost:3001/api/chatbot/process
+Content-Type: application/json
+
+{
+  "message": "Quanto vendemos no mês?"
+}
+
+### Comparação temporal
+POST http://localhost:3001/api/chatbot/process
+Content-Type: application/json
+
+{
+  "message": "Como foi o crescimento comparado ao mês passado?"
+}
+
+### Análise de margem
+POST http://localhost:3001/api/chatbot/process
+Content-Type: application/json
+
+{
+  "message": "Qual foi a margem de lucro de hoje?"
+}

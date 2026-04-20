@@ -1,14 +1,12 @@
-const dayjs = require('dayjs');
+import dayjs from 'dayjs'
 
 function toYYYYMMDD(dateValue) {
-  return dayjs(dateValue).format('YYYYMMDD');
+  return dayjs(dateValue).format('YYYYMMDD')
 }
 
 function todayYYYYMMDD() {
-  return dayjs().format('YYYYMMDD');
+  return dayjs().format('YYYYMMDD')
 }
 
-module.exports = {
-  toYYYYMMDD,
-  todayYYYYMMDD,
-};
+export { toYYYYMMDD, todayYYYYMMDD }
+export default { toYYYYMMDD, todayYYYYMMDD }

@@ -1,9 +1,9 @@
-const express = require('express');
-const resumoFaturamentoController = require('../controllers/solar/faturamento/resumoFaturamentoController');
+import express from 'express'
+import { resumoFaturamento, resumoFaturamentoTotal } from '../controllers/solar/faturamento/resumoFaturamentoController.js'
 
-const router = express.Router();
+const router = express.Router()
 
-router.get('/resumo-faturamento', resumoFaturamentoController.resumoFaturamento);
-router.get('/resumo-faturamento-total', resumoFaturamentoController.resumoFaturamentoTotal);
+router.get('/resumo-faturamento', resumoFaturamento)
+router.get('/resumo-faturamento-total', resumoFaturamentoTotal)
 
-module.exports = router;
+export default router

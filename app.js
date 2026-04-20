@@ -1,14 +1,6 @@
-const express = require('express');
-const resumoFaturamentoRoutes = require('./routes/resumoFaturamentoRouters');
+// DEPRECATED: Este arquivo foi substituído por src/app.js
+// Mantido apenas para compatibilidade histórica
 
-const app = express();
+console.warn('⚠️  app.js foi descontinuado. Use src/app.js ao invés.')
 
-app.use(express.json());
-
-app.get('/health', (req, res) => {
-  return res.json({ ok: true });
-});
-
-app.use('/api/loj-resumo-faturamento', resumoFaturamentoRoutes);
-
-module.exports = app;
+export default {}

@@ -1,12 +1,23 @@
 {
-  "name": "chatbot",
+  "name": "chatbot-backend",
   "version": "1.0.0",
-  "main": "index.js",
+  "description": "Backend do Chatbot com Ollama + Gemma, integrado com Next.js",
+  "main": "server.js",
   "license": "MIT",
   "type": "module",
   "scripts": {
-    "start": "node server.js"
+    "start": "node server.js",
+    "dev": "node --watch server.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
   },
+  "keywords": [
+    "chatbot",
+    "ollama",
+    "gemma",
+    "express",
+    "nextjs"
+  ],
+  "author": "",
   "dependencies": {
     "axios": "^1.15.0",
     "axios-cookiejar-support": "^6.0.5",
@@ -14,7 +25,7 @@
     "dayjs": "^1.11.20",
     "dotenv": "^17.4.2",
     "express": "^5.2.1",
-    "pg": "^8.20.0",
     "tough-cookie": "^6.0.1"
-  }
+  },
+  "devDependencies": {}
 }

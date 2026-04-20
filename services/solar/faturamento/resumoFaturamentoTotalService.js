@@ -1,13 +1,12 @@
-const { postComSessao } = require('../../../config/birelClient');
+import { postComSessao } from '../../../config/birelClient.js'
 
 async function execute(dataYYYYMMDD) {
   const response = await postComSessao('(LOJ_FAT_FATUTO)', {
     datalojfatuto: dataYYYYMMDD,
-  });
+  })
 
-  return response.data?.bi007?.bidata ?? [];
+  return response.data?.bi007?.bidata ?? []
 }
 
-module.exports = {
-  execute,
-};
+export default { execute }
+export { execute }
