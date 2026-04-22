@@ -55,7 +55,7 @@ export class ChatService {
       throw new Error('Mensagem inválida')
     }
 
-    // Temporary hardcoded response
+    // Resposta temporária (Mock)
     return {
       success: true,
       reply: 'Olá! Como posso ajudar você hoje?',
@@ -64,6 +64,7 @@ export class ChatService {
       billingData: null,
       raw: { test: true },
     }
+  } // <--- AQUI FALTAVA ESSA CHAVE!
 
   async streamChat(message, history = [], includeBillingContext = true, date = null) {
     if (!message || typeof message !== 'string') {
