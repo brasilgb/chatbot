@@ -1,6 +1,11 @@
 import chatService from '../services/chatService.js'
 
 export class ChatController {
+  async health(req, res) {
+    const result = await chatService.checkHealth()
+    return res.status(result.ok ? 200 : 503).json(result)
+  }
+
   async test(req, res) {
     console.log('Test endpoint called')
     return res.json({ success: true, message: 'Test endpoint working' })

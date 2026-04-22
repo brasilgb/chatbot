@@ -55,16 +55,47 @@ export class ChatService {
       throw new Error('Mensagem inválida')
     }
 
-    // Resposta temporária (Mock)
+    const systemPrompt = await this.getSystemPrompt(message, includeBillingContext, date)
+    const messages = [
+      {
+        role: 'system',
+        content: systemPrompt,
+      },
+      ...history,
+      {
+        role: 'user',
+        content: message,
+      },
+    ]
+
+    const ollamaResponse = await fetch(`${OLLAMA_URL}/api/chat`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: MODEL,
+        messages,
+        stream: false,
+      }),
+    })
+
+    if (!ollamaResponse.ok) {
+      const errorBody = await ollamaResponse.text()
+      throw new Error(`Ollama não está respondendo: ${errorBody}`)
+    }
+
+    const data = await ollamaResponse.json()
+
     return {
       success: true,
-      reply: 'Olá! Como posso ajudar você hoje?',
+      reply: data.message?.content ?? '',
       model: MODEL,
       hasBillingData: false,
       billingData: null,
-      raw: { test: true },
+      raw: data,
     }
-  } // <--- AQUI FALTAVA ESSA CHAVE!
+  }
 
   async streamChat(message, history = [], includeBillingContext = true, date = null) {
     if (!message || typeof message !== 'string') {
