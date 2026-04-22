@@ -1,4 +1,4 @@
-import { toYYYYMMDD } from '../../../utils/date.js'
+import { toYYYYMMDD } from '../../utils/date.js'
 
 export async function buildRevenueQuery(period, billingContextService) {
   if (!period) return null

@@ -3,7 +3,7 @@ import billingQueryController from '../controllers/billingQueryController.js'
 import {
   resumoFaturamento,
   resumoFaturamentoTotal,
-} from '../../controllers/solar/faturamento/resumoFaturamentoController.js'
+} from '../controllers/solar/faturamento/resumoFaturamentoController.js'
 
 const router = express.Router()
 

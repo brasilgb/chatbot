@@ -1,7 +1,7 @@
 import dayjs from 'dayjs'
-import { todayYYYYMMDD, toYYYYMMDD } from '../../utils/date.js'
-import { execute as resumoFaturamento } from '../../services/solar/faturamento/resumoFaturamentoService.js'
-import { execute as resumoFaturamentoTotal } from '../../services/solar/faturamento/resumoFaturamentoTotalService.js'
+import { todayYYYYMMDD, toYYYYMMDD } from '../utils/date.js'
+import { execute as resumoFaturamento } from './solar/faturamento/resumoFaturamentoService.js'
+import { execute as resumoFaturamentoTotal } from './solar/faturamento/resumoFaturamentoTotalService.js'
 
 /**
  * Serviço para buscar dados de faturamento e formatar para o chatbot

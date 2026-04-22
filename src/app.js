@@ -48,9 +48,6 @@ app.use('/api/billing', billingRoutes)
 // Routes - Chatbot Modular (nova arquitetura)
 app.use('/api/chatbot', chatbotRoutes)
 
-// Routes - Chatbot Modular (nova arquitetura)
-app.use('/api/chatbot', chatbotRoutes)
-
 // 404 handler
 app.use((req, res) => {
   return res.status(404).json({
