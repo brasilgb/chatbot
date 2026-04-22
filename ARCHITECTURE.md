@@ -5,8 +5,6 @@
 ├── 📄 .env.example                       # Environment template
 ├── 📄 .env                               # Local config (git-ignored)
 ├── 📄 .gitignore
-├── 📄 Dockerfile                         # Container setup
-├── 📄 docker-compose.yml                 # Ollama + Backend
 ├── 📄 setup.sh                          # Setup script
 ├── 📄 test-billing.sh                   # Test script
 │
@@ -16,54 +14,35 @@
 │   ├── 📖 FRONTEND.md                   # Next.js integration guide
 │   └── 📖 IMPLEMENTATION_SUMMARY.md     # What was done
 │
-├── 🔧 Configuration
-│   ├── 📄 config/
-│   │   └── birelClient.js              # Solar server client (ESM)
-│   └── 📄 utils/
-│       └── date.js                     # Date utilities (ESM)
-│
-├── 🚀 src/ (New modular structure)
+├── 🚀 src/
 │   ├── app.js                          # Express app with all routes
+│   │
+│   ├── config/
+│   │   └── birelClient.js              # Solar server client (ESM)
 │   │
 │   ├── controllers/
 │   │   ├── chatController.js           # Chat endpoints
-│   │   └── billingQueryController.js   # Billing queries
+│   │   ├── billingQueryController.js   # Billing queries
+│   │   ├── whatsappController.js       # WhatsApp webhook
+│   │   └── solar/faturamento/          # Solar billing controllers
 │   │
 │   ├── routes/
 │   │   ├── chatRoutes.js               # /api/chat routes
-│   │   └── billingRoutes.js            # /api/billing routes
+│   │   ├── billingRoutes.js            # /api/billing routes
+│   │   └── whatsappRoutes.js           # /api/whatsapp routes
 │   │
 │   ├── services/
 │   │   ├── chatService.js              # Chat + Ollama integration
-│   │   ├── billingContextService.js    # ⭐ NEW: Billing context
-│   │   └── [old structure below]
+│   │   ├── billingContextService.js    # Billing context
+│   │   ├── whatsappService.js          # WhatsApp Cloud API
+│   │   └── solar/faturamento/          # Solar billing services
 │   │
 │   ├── middlewares/
 │   │   └── index.js                    # Logging, CORS, rate limit
 │   │
 │   └── utils/
+│       ├── date.js                     # Date utilities
 │       └── chatUtils.js                # Chat utilities
-│
-├── ☀️ Legacy Solar Structure (ESM converted)
-│   ├── config/
-│   │   └── birelClient.js              # Solar authentication
-│   │
-│   ├── controllers/
-│   │   └── solar/
-│   │       └── faturamento/
-│   │           └── resumoFaturamentoController.js
-│   │
-│   ├── routes/
-│   │   └── resumoFaturamentoRouters.js
-│   │
-│   ├── services/
-│   │   └── solar/
-│   │       └── faturamento/
-│   │           ├── resumoFaturamentoService.js
-│   │           └── resumoFaturamentoTotalService.js
-│   │
-│   └── utils/
-│       └── date.js
 │
 └── 🧪 Testing
     └── requests.http                   # HTTP request examples
@@ -99,14 +78,20 @@ POST /api/billing/query
 
 POST /api/billing/check-question
      └─→ Verify if message is about billing
+
+GET  /api/whatsapp/webhook
+     └─→ Meta webhook verification
+
+POST /api/whatsapp/webhook
+     └─→ Receives WhatsApp messages and replies using chatService
 ```
 
 ## 📊 Data Flow
 
 ```
-User → [Frontend/API] → POST /api/chat
+User → [Frontend/API or WhatsApp] → POST /api/chat or /api/whatsapp/webhook
                             ↓
-                    [ChatController]
+                    [ChatController or WhatsAppController]
                             ↓
                     [ChatService.chat()]
                             ↓
@@ -161,17 +146,17 @@ chatService.js
     ├─→ Ollama (fetch)
     └─→ billingContextService.js
         ├─→ resumoFaturamentoService.js
-        │   └─→ birelClient.js (Solar)
+        │   └─→ src/config/birelClient.js (Solar)
         ├─→ resumoFaturamentoTotalService.js
-        │   └─→ birelClient.js (Solar)
-        └─→ date.js (dayjs)
+        │   └─→ src/config/birelClient.js (Solar)
+        └─→ src/utils/date.js (dayjs)
 ```
 
 ## 📈 Statistics
 
-- **Total Routes**: 8 endpoints
-- **Total Services**: 3 (chat, billing context, legacy)
-- **Total Controllers**: 2 (chat, billing)
+- **Total Routes**: 10 endpoints
+- **Total Services**: chat, billing context, WhatsApp, chatbot helpers and Solar billing services
+- **Total Controllers**: 3 (chat, billing, whatsapp)
 - **Middlewares**: 3 (logging, validation, rate limit)
 - **ESM Modules**: 100% (including legacy code)
 - **Code Lines**: ~1000+ (services + controllers + routes)
@@ -188,10 +173,13 @@ chatService.js
 ✅ Error handling
 ✅ Health checks
 ✅ Session management with Solar
+✅ WhatsApp Business webhook support
 
-## 🚀 Deployment Ready
+## 🚀 Bare Metal Ready
 
-- Docker support (Dockerfile + docker-compose.yml)
+- Backend Node.js on `127.0.0.1:3001`
+- Ollama on `127.0.0.1:11434`
+- Nginx proxy for `/api` and `/health`
 - Environment configuration (.env)
 - Error handling and logging
 - Rate limiting

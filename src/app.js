@@ -4,6 +4,7 @@ import { loggerMiddleware, rateLimitMiddleware, jsonValidationMiddleware } from 
 import chatRoutes from './routes/chatRoutes.js'
 import billingRoutes from './routes/billingRoutes.js'
 import chatbotRoutes from './routes/chatbotRoutes.js'
+import whatsappRoutes from './routes/whatsappRoutes.js'
 
 const app = express()
 
@@ -47,6 +48,9 @@ app.use('/api/billing', billingRoutes)
 
 // Routes - Chatbot Modular (nova arquitetura)
 app.use('/api/chatbot', chatbotRoutes)
+
+// Routes - WhatsApp Business Cloud API
+app.use('/api/whatsapp', whatsappRoutes)
 
 // 404 handler
 app.use((req, res) => {

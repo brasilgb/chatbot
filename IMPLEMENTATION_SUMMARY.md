@@ -47,8 +47,8 @@ test-billing.sh                        ✅ Script de testes
 src/services/chatService.js            ✨ Integração com faturamento
 src/controllers/chatController.js      ✨ Suporte a novo parâmetro
 src/app.js                             ✨ Rotas de billing
-config/birelClient.js                  ✨ Convertido para ESM
-utils/date.js                          ✨ Convertido para ESM
+src/config/birelClient.js              ✨ Convertido para ESM
+src/utils/date.js                      ✨ Convertido para ESM
 package.json                           ✨ Dependências restauradas
 README.md                              ✨ Documentação atualizada
 requests.http                          ✨ Exemplos novos
@@ -56,12 +56,12 @@ requests.http                          ✨ Exemplos novos
 
 ### Convertidos para ESM (módulos ES)
 ```
-✅ config/birelClient.js
-✅ utils/date.js
-✅ controllers/solar/faturamento/resumoFaturamentoController.js
-✅ services/solar/faturamento/resumoFaturamentoService.js
-✅ services/solar/faturamento/resumoFaturamentoTotalService.js
-✅ routes/resumoFaturamentoRouters.js
+✅ src/config/birelClient.js
+✅ src/utils/date.js
+✅ src/controllers/solar/faturamento/resumoFaturamentoController.js
+✅ src/services/solar/faturamento/resumoFaturamentoService.js
+✅ src/services/solar/faturamento/resumoFaturamentoTotalService.js
+✅ src/routes/billingRoutes.js
 ```
 
 ## 🎯 Como Funciona

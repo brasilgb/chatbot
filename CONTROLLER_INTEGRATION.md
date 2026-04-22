@@ -1,13 +1,13 @@
-# ✅ Integração: Controller com Serviços (Sem SQL)
+# ✅ Integração: Controller com Serviços e Ollama
 
 ## 📝 Arquivo Atualizado
 
-**`/controllers/chatController.js`** foi refatorado para:
-- ✅ Extrair dados **direto dos serviços** (sem SQL)
-- ✅ Usar `resolveDateRange()` para períodos
-- ✅ Usar `detectIntent()` para intenção
-- ✅ Usar `buildRevenueQuery()` com billingContextService
-- ✅ Usar `revenueResponse()` para formatação
+**`src/controllers/chatController.js`** usa `src/services/chatService.js` para:
+- ✅ Validar o corpo da requisição
+- ✅ Encaminhar a mensagem para o Ollama/Gemma
+- ✅ Enviar histórico opcional para manter contexto
+- ✅ Ativar contexto de faturamento quando a pergunta for relacionada a vendas/receita
+- ✅ Expor health check do Ollama em `/api/chat/health`
 
 ---
 
@@ -18,20 +18,14 @@ Requisição HTTP
     ↓
 chatController.chat()
     ├─ Extrai mensagem do req.body
-    ├─ resolveDateRange(message)          → Período
-    ├─ detectIntent(message)               → Intenção
+    ├─ Valida message e history
+    ├─ chatService.chat(message, history, includeBillingContext, date)
+    │   ├─ Monta system prompt
+    │   ├─ Se for pergunta de faturamento, busca dados Solar
+    │   ├─ Chama Ollama em /api/chat com model gemma3:4b
+    │   └─ Retorna { success, reply, model, raw }
     │
-    ├─ Se intent === "revenue"
-    │   ├─ buildRevenueQuery(period, billingContextService)
-    │   │   ├─ Chama getBillingResume() ou getBillingResumeTotal()
-    │   │   └─ Retorna { success, data, formatted, period }
-    │   │
-    │   ├─ revenueResponse(data, period)
-    │   │   └─ Formata para string legível
-    │   │
-    │   └─ res.json({ success, intent, period, reply, raw })
-    │
-    └─ Senão: res.json({ success: false, reply: "Não entendi..." })
+    └─ res.json(result)
 ```
 
 ---
@@ -39,47 +33,31 @@ chatController.chat()
 ## 📋 Código Atual
 
 ```javascript
-import { resolveDateRange } from "../services/chatbot/dateResolverService.js"
-import { detectIntent } from "../services/chatbot/intentParserService.js"
-import { buildRevenueQuery } from "../services/chatbot/queryBuilderService.js"
-import { revenueResponse } from "../services/chatbot/responseFormatterService.js"
-import billingContextService from "../services/billingContextService.js"
+import chatService from '../services/chatService.js'
 
-export async function chat(req, res) {
-  const { message } = req.body
-
-  // 1. Resolver período (hoje, semana, mês)
-  const period = resolveDateRange(message)
-
-  // 2. Detectar intenção (revenue, margin, etc)
-  const intent = detectIntent(message)
-
-  // 3. Se é pergunta sobre faturamento
-  if (intent === "revenue") {
-    // Extrai dados direto dos serviços
-    const revenueData = await buildRevenueQuery(period, billingContextService)
-
-    if (!revenueData.success) {
-      return res.status(500).json({
-        success: false,
-        error: 'Erro ao buscar dados de faturamento'
-      })
-    }
-
-    // Formata resposta legível
-    const reply = revenueResponse(revenueData.data, period)
-
-    return res.json({
-      success: true,
-      intent,
-      period,
-      reply,
-      raw: revenueData
-    })
+export class ChatController {
+  async health(req, res) {
+    const result = await chatService.checkHealth()
+    return res.status(result.ok ? 200 : 503).json(result)
   }
 
-  // 4. Senão, resposta padrão
-  res.json({ success: false, reply: "Não entendi sua solicitação." })
+  async chat(req, res) {
+    const {
+      message,
+      history = [],
+      includeBillingContext = true,
+      date = null,
+    } = req.body
+
+    const result = await chatService.chat(
+      message,
+      history,
+      includeBillingContext,
+      date
+    )
+
+    return res.json(result)
+  }
 }
 ```
 
@@ -97,20 +75,11 @@ curl -X POST http://localhost:3001/api/chat \
 ```json
 {
   "success": true,
-  "intent": "revenue",
-  "period": {
-    "type": "day",
-    "startDate": "2024-04-20",
-    "endDate": "2024-04-20",
-    "displayName": "hoje"
-  },
-  "reply": "Faturamento de hoje:\nTotal Geral: R$ 428.548,73\n\nDetalhado por Associação:\n  1. MO: R$ 45.792,62 (Margem: 42,67%)\n  2. MC: R$ 56.874,35 (Margem: 35,47%)\n  ...",
-  "raw": {
-    "success": true,
-    "data": [...],
-    "formatted": "...",
-    "period": {...}
-  }
+  "reply": "Resposta do Gemma baseada no contexto disponível...",
+  "model": "gemma3:4b",
+  "hasBillingData": false,
+  "billingData": null,
+  "raw": {}
 }
 ```
 
@@ -119,16 +88,13 @@ curl -X POST http://localhost:3001/api/chat \
 ## 🔗 Diagrama de Dependências
 
 ```
-controllers/chatController.js
+src/controllers/chatController.js
     │
-    ├─→ dateResolverService.js       (Período)
-    ├─→ intentParserService.js       (Intenção)
-    ├─→ queryBuilderService.js       (Query)
-    │   └─→ billingContextService.js (Dados)
-    │       ├─→ getBillingResume()
-    │       └─→ getBillingResumeTotal()
-    │
-    └─→ responseFormatterService.js  (Formatação)
+    └─→ src/services/chatService.js
+        ├─→ Ollama /api/chat
+        └─→ src/services/billingContextService.js
+            ├─→ src/services/solar/faturamento/resumoFaturamentoService.js
+            └─→ src/services/solar/faturamento/resumoFaturamentoTotalService.js
 ```
 
 ---
@@ -136,10 +102,10 @@ controllers/chatController.js
 ## ✨ Benefícios
 
 ✅ **Sem SQL** - Dados direto dos serviços  
-✅ **Estruturado** - Resposta clara e organizada  
+✅ **Ollama real** - Sem resposta mock no `/api/chat`
 ✅ **Reutilizável** - Serviços independentes  
 ✅ **Testável** - Cada função isolada  
-✅ **Dinâmico** - Período automático  
+✅ **Dinâmico** - Contexto de faturamento automático
 
 ---
 
@@ -170,18 +136,16 @@ Abra `requests.http` e clique "Send Request"
 
 ## 📚 Integração com Seu Projeto
 
-O controller atual está em:
-- **`/controllers/chatController.js`** ← Versão simplificada com serviços
-- **`/src/controllers/chatController.js`** ← Versão original com classe (se precisar)
-
-Se precisar usar a classe original com os novos serviços, basta adicionar as importações e chamar os serviços dentro do método `chat()`.
+O controller ativo está em `src/controllers/chatController.js`.
+O serviço ativo está em `src/services/chatService.js`.
+As rotas são registradas por `src/routes/chatRoutes.js` em `/api/chat`.
 
 ---
 
 ## 🎯 Próximas Melhorias
 
 - [ ] Adicionar mais intenções (margin, comparison, etc)
-- [ ] Suportar chat genérico (fallback para Ollama)
+- [x] Suportar chat genérico via Ollama
 - [ ] Adicionar tratamento de erros mais robusto
 - [ ] Implementar cache de resultados
 - [ ] Adicionar logging estruturado

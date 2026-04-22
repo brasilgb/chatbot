@@ -180,3 +180,39 @@ Content-Type: application/json
 {
   "message": "Qual foi a margem de lucro de hoje?"
 }
+
+### ========== WHATSAPP BUSINESS ==========
+
+### Webhook - verificação local
+GET {{host}}/api/whatsapp/webhook?hub.mode=subscribe&hub.verify_token=seu_token_de_verificacao&hub.challenge=123456
+
+### Webhook - simular mensagem recebida da Meta
+POST {{host}}/api/whatsapp/webhook
+Content-Type: application/json
+
+{
+  "entry": [
+    {
+      "changes": [
+        {
+          "value": {
+            "metadata": {
+              "phone_number_id": "PHONE_NUMBER_ID"
+            },
+            "messages": [
+              {
+                "id": "wamid.TESTE",
+                "from": "5511999999999",
+                "timestamp": "1710000000",
+                "type": "text",
+                "text": {
+                  "body": "Olá, você está usando Gemma pelo Ollama?"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -71,12 +71,12 @@ POST /api/billing/check-question
 ### 5. Conversão para ESM
 Todos os arquivos antigos foram convertidos de CommonJS para ES Modules:
 
-✅ `config/birelClient.js`
-✅ `utils/date.js`
-✅ `controllers/solar/faturamento/resumoFaturamentoController.js`
-✅ `services/solar/faturamento/resumoFaturamentoService.js`
-✅ `services/solar/faturamento/resumoFaturamentoTotalService.js`
-✅ `routes/resumoFaturamentoRouters.js`
+✅ `src/config/birelClient.js`
+✅ `src/utils/date.js`
+✅ `src/controllers/solar/faturamento/resumoFaturamentoController.js`
+✅ `src/services/solar/faturamento/resumoFaturamentoService.js`
+✅ `src/services/solar/faturamento/resumoFaturamentoTotalService.js`
+✅ `src/routes/billingRoutes.js`
 
 ## 📡 Endpoints Novos
 
@@ -216,7 +216,7 @@ Nenhuma configuração especial é necessária! O sistema funciona automaticamen
 
 - **OLLAMA_URL**: URL do servidor Ollama
 - **MODEL**: Modelo (gemma3:4b padrão)
-- **Conexão Solar**: Usa configuração existente de `config/birelClient.js`
+- **Conexão Solar**: Usa configuração existente de `src/config/birelClient.js`
 
 ## 🚀 Próximos Passos
 

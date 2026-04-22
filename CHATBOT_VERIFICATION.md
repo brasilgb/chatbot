@@ -172,8 +172,8 @@ async processMessage(req, res) {
 
 ### Passo 1: Iniciar Servidor
 ```bash
-cd /home/anderson/projects/nodejs/chatbot
-yarn start
+cd /caminho/para/chatbot-back
+npm start
 ```
 
 Deve exibir:
@@ -247,4 +247,3 @@ Para adicionar uma nova intenção:
 4. Documente em `CHATBOT_MODULAR_GUIDE.md`
 
 Pronto! Nova intenção funcionando! 🚀
-

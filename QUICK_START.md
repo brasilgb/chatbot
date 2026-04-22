@@ -3,10 +3,13 @@
 ## 1️⃣ Iniciar o Backend
 
 ```bash
-cd /home/anderson/projects/nodejs/chatbot
+cd /caminho/para/chatbot-back
 
 # Garantir que Ollama está rodando (em outro terminal)
 ollama serve
+
+# Garantir que o modelo está instalado
+ollama pull gemma3:4b
 
 # Instalar dependências (primeira vez)
 npm install
@@ -94,8 +97,22 @@ cd chatbot-frontend
 
 ### Criar arquivo .env.local
 
+Desenvolvimento local:
+
 ```env
 NEXT_PUBLIC_API_URL=http://localhost:3001/api
+```
+
+Produção bare metal com Nginx no mesmo domínio:
+
+```env
+NEXT_PUBLIC_API_URL=/api
+```
+
+Produção com API em subdomínio separado:
+
+```env
+NEXT_PUBLIC_API_URL=https://api.seu-dominio.com/api
 ```
 
 ### Copiar código do FRONTEND.md
@@ -121,7 +138,7 @@ User abre http://localhost:3000
     ↓
     Digita: "Qual foi o faturamento de hoje?"
     ↓
-    Frontend faz POST para http://localhost:3001/api/chat
+    Frontend faz POST para /api/chat
     ↓
     Backend processa:
     - Detecta pergunta sobre faturamento
@@ -147,6 +164,11 @@ curl http://localhost:3001/health
 # Ver models disponíveis no Ollama
 curl http://localhost:3001/api/chat/health
 
+# Testar chat pelo backend
+curl -X POST http://localhost:3001/api/chat \
+  -H "Content-Type: application/json" \
+  -d '{"message":"Responda exatamente: TESTE_GEMMA_OK"}'
+
 # Listar modelos instalados
 ollama list
 
@@ -167,14 +189,14 @@ curl -X POST http://127.0.0.1:11434/api/chat \
 ## 6️⃣ Estrutura de Pastas Recomendada
 
 ```
-~/projects/
-├── nodejs/
-│   └── chatbot/              ← Backend (já existe)
-│       ├── src/
-│       ├── server.js
-│       └── package.json
+/var/www/
+├── chatbot-back/              ← Backend Node.js na porta 3001
+│   ├── src/
+│   ├── server.js
+│   ├── package.json
+│   └── .env
 │
-└── chatbot-frontend/         ← Frontend (criar)
+└── chatbot-frontend/          ← Frontend Next.js
     ├── app/
     ├── components/
     ├── lib/
@@ -182,7 +204,39 @@ curl -X POST http://127.0.0.1:11434/api/chat \
     └── .env.local
 ```
 
-## 7️⃣ Troubleshooting
+## 7️⃣ Produção Bare Metal
+
+No `.env` do backend:
+
+```env
+PORT=3001
+HOST=127.0.0.1
+NODE_ENV=production
+OLLAMA_URL=http://127.0.0.1:11434
+MODEL=gemma3:4b
+FRONTEND_URL=https://seu-dominio.com
+```
+
+Nginx deve encaminhar `/api` para o backend:
+
+```nginx
+location /api/ {
+    proxy_pass http://127.0.0.1:3001/api/;
+    proxy_http_version 1.1;
+    proxy_set_header Host $host;
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $scheme;
+}
+
+location /health {
+    proxy_pass http://127.0.0.1:3001/health;
+    proxy_http_version 1.1;
+    proxy_set_header Host $host;
+}
+```
+
+## 8️⃣ Troubleshooting
 
 ### Porta 3001 em uso
 ```bash
@@ -204,6 +258,7 @@ ollama pull gemma3:4b
 ### CORS Error
 - Verifique se `FRONTEND_URL` no `.env` está correto
 - Padrão: `http://localhost:3000`
+- Em produção no mesmo domínio, use `NEXT_PUBLIC_API_URL=/api`
 
 ### Import Error
 ```bash
@@ -212,7 +267,7 @@ rm -rf node_modules
 npm install
 ```
 
-## 8️⃣ Arquivos Importantes
+## 9️⃣ Arquivos Importantes
 
 | Arquivo | Função |
 |---------|--------|
@@ -225,7 +280,7 @@ npm install
 | `FRONTEND.md` | Guia Next.js |
 | `requests.http` | Exemplos de requisições |
 
-## 9️⃣ Endpoints Resumido
+## 🔟 Endpoints Resumido
 
 | Método | Endpoint | O que faz |
 |--------|----------|-----------|
@@ -236,8 +291,10 @@ npm install
 | GET | `/api/billing/resumo-faturamento` | Dados de faturamento |
 | POST | `/api/billing/query` | Query direta |
 | POST | `/api/billing/check-question` | Verifica tipo de pergunta |
+| GET | `/api/whatsapp/webhook` | Verificação do webhook da Meta |
+| POST | `/api/whatsapp/webhook` | Recebe mensagens do WhatsApp |
 
-## 🔟 Próximas Etapas
+## Próximas Etapas
 
 1. ✅ Backend rodando
 2. ⏭️ Criar frontend Next.js (see FRONTEND.md)

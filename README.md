@@ -11,8 +11,6 @@
 ### 1. Instalar dependências
 ```bash
 npm install
-# ou
-yarn install
 ```
 
 ### 2. Configurar variáveis de ambiente
@@ -23,6 +21,7 @@ cp .env.example .env
 Edite o `.env` com suas configurações:
 ```env
 PORT=3001
+HOST=127.0.0.1
 NODE_ENV=development
 OLLAMA_URL=http://127.0.0.1:11434
 MODEL=gemma3:4b
@@ -242,6 +241,26 @@ Resposta:
 }
 ```
 
+### 11. WhatsApp - Webhook de Verificação
+```
+GET /api/whatsapp/webhook
+```
+
+Este endpoint é usado pela Meta para validar o webhook. Configure no painel do WhatsApp Business:
+
+```txt
+https://seu-dominio.com/api/whatsapp/webhook
+```
+
+O token informado na Meta deve ser igual ao `WHATSAPP_VERIFY_TOKEN` do `.env`.
+
+### 12. WhatsApp - Recebimento de Mensagens
+```
+POST /api/whatsapp/webhook
+```
+
+A Meta envia mensagens recebidas neste endpoint. O backend extrai mensagens de texto, chama `chatService.chat()` e responde pelo WhatsApp usando a Cloud API.
+
 ## 🏢 Integração de Faturamento
 
 O chatbot foi integrado com o sistema de faturamento Solar! Agora ele consegue:
@@ -312,6 +331,18 @@ cd frontend
 Criar `.env.local`:
 ```env
 NEXT_PUBLIC_API_URL=http://localhost:3001/api
+```
+
+Em produção com Nginx fazendo proxy no mesmo domínio do frontend, use:
+
+```env
+NEXT_PUBLIC_API_URL=/api
+```
+
+Se o backend ficar em um subdomínio separado, use a URL pública completa:
+
+```env
+NEXT_PUBLIC_API_URL=https://api.seu-dominio.com/api
 ```
 
 ### 3. Criar hook para usar o chat
@@ -440,57 +471,97 @@ export default function Home() {
 }
 ```
 
-## 🐳 Usando Docker (Opcional)
+## 🚀 Produção Bare Metal com Nginx
 
-### Dockerfile
+Este projeto foi preparado para rodar direto no servidor, sem Docker:
 
-```dockerfile
-FROM node:20-alpine
+- Backend Node.js escutando em `http://127.0.0.1:3001`
+- Ollama escutando em `http://127.0.0.1:11434`
+- Modelo padrão: `gemma3:4b`
+- Nginx expondo o backend para o frontend/domínio público
 
-WORKDIR /app
+### Variáveis do backend
 
-COPY package*.json ./
-RUN npm install
+No `.env` do backend:
 
-COPY . .
-
-EXPOSE 3001
-
-CMD ["npm", "start"]
+```env
+PORT=3001
+HOST=127.0.0.1
+NODE_ENV=production
+OLLAMA_URL=http://127.0.0.1:11434
+MODEL=gemma3:4b
+FRONTEND_URL=https://seu-dominio.com
+WHATSAPP_VERIFY_TOKEN=troque_por_um_token_seguro
+WHATSAPP_ACCESS_TOKEN=token_da_meta
+WHATSAPP_PHONE_NUMBER_ID=id_do_numero
+WHATSAPP_API_VERSION=v20.0
 ```
 
-### docker-compose.yml
+As variáveis `WHATSAPP_*` são necessárias somente se o canal WhatsApp Business estiver ativo.
 
-```yaml
-version: '3.8'
+### Processo com systemd
 
-services:
-  backend:
-    build: .
-    ports:
-      - "3001:3001"
-    environment:
-      NODE_ENV: production
-      OLLAMA_URL: http://ollama:11434
-      PORT: 3001
-    depends_on:
-      - ollama
+Exemplo de unidade em `/etc/systemd/system/chatbot-back.service`:
 
-  ollama:
-    image: ollama/ollama:latest
-    ports:
-      - "11434:11434"
-    volumes:
-      - ollama_data:/root/.ollama
-    command: serve
+```ini
+[Unit]
+Description=Chatbot Backend Ollama
+After=network.target
 
-volumes:
-  ollama_data:
+[Service]
+Type=simple
+WorkingDirectory=/caminho/para/chatbot-back
+ExecStart=/usr/bin/npm start
+Restart=always
+RestartSec=5
+Environment=NODE_ENV=production
+
+[Install]
+WantedBy=multi-user.target
 ```
 
-Execute:
+Aplicar:
+
 ```bash
-docker-compose up -d
+sudo systemctl daemon-reload
+sudo systemctl enable chatbot-back
+sudo systemctl start chatbot-back
+sudo systemctl status chatbot-back
+```
+
+### Nginx
+
+Se o frontend e a API usam o mesmo domínio, publique a API em `/api` e o health check em `/health`:
+
+```nginx
+server {
+    server_name seu-dominio.com;
+
+    location /api/ {
+        proxy_pass http://127.0.0.1:3001/api/;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
+    location /health {
+        proxy_pass http://127.0.0.1:3001/health;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+    }
+}
+```
+
+Teste local no servidor:
+
+```bash
+curl http://127.0.0.1:3001/health
+curl http://127.0.0.1:3001/api/chat/health
+curl -X POST http://127.0.0.1:3001/api/chat \
+  -H "Content-Type: application/json" \
+  -d '{"message":"Responda exatamente: TESTE_GEMMA_OK"}'
 ```
 
 ## 📝 Estrutura do Projeto
@@ -500,11 +571,16 @@ docker-compose up -d
 ├── src/
 │   ├── app.js              # Configuração principal do Express
 │   ├── controllers/
-│   │   └── chatController.js    # Controladores de chat
+│   │   ├── chatController.js    # Controladores de chat
+│   │   └── solar/               # Controladores de faturamento
 │   ├── routes/
-│   │   └── chatRoutes.js        # Rotas da API
-│   └── services/
-│       └── chatService.js       # Integração com Ollama
+│   │   ├── chatRoutes.js        # Rotas de chat
+│   │   └── billingRoutes.js     # Rotas de faturamento
+│   ├── services/
+│   │   ├── chatService.js       # Integração com Ollama
+│   │   └── solar/               # Integração Solar
+│   ├── config/
+│   └── utils/
 ├── server.js               # Ponto de entrada
 ├── package.json
 ├── .env                    # Variáveis de ambiente (local)
@@ -536,7 +612,7 @@ ollama pull gemma3:4b
 ```
 
 ### Erro de CORS
-Verifique se `FRONTEND_URL` no `.env` está correto e que o frontend faz requisições para `http://localhost:3001/api`
+Verifique se `FRONTEND_URL` no `.env` está correto. Em desenvolvimento, o frontend normalmente usa `http://localhost:3001/api`. Em produção no mesmo domínio via Nginx, use `NEXT_PUBLIC_API_URL=/api`.
 
 ## 📚 Recursos Úteis
 
