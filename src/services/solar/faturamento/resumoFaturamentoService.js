@@ -1,6 +1,7 @@
 import { postComSessao } from '../../../config/birelClient.js'
 
 async function execute(dataYYYYMMDD) {
+  console.log(dataYYYYMMDD);
   const response = await postComSessao('(LOJ_FAT_FATURA)', {
     datalojfatura: dataYYYYMMDD,
   })
