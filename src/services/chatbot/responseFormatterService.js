@@ -19,16 +19,31 @@ export function revenueResponse(data, period) {
 Total de registros: ${data.length}
 Total Geral: R$ ${formatter.format(total)}
 
-Detalhado por registro:\n`
-
-  data.forEach((item, index) => {
-    const values = columns
-      .map((column) => `${column}: ${formatValue(item[column])}`)
-      .join(' | ')
-    response += `${index + 1}. ${values}\n`
-  })
+${data.length > 1 ? 'Detalhado em tabela:' : 'Detalhado por registro:'}
+${formatRecords(data, columns)}`
 
   return response
+}
+
+function formatRecords(data, columns) {
+  if (data.length > 1) {
+    return formatMarkdownTable(data, columns)
+  }
+
+  return columns
+    .map((column) => `${column}: ${formatValue(data[0]?.[column])}`)
+    .join('\n')
+}
+
+function formatMarkdownTable(data, columns) {
+  const header = `| ${columns.join(' | ')} |`
+  const separator = `| ${columns.map(() => '---').join(' | ')} |`
+  const rows = data.map((item) => {
+    const values = columns.map((column) => escapeTableValue(formatValue(item[column])))
+    return `| ${values.join(' | ')} |`
+  })
+
+  return [header, separator, ...rows].join('\n')
 }
 
 function getColumns(data) {
@@ -90,6 +105,10 @@ function formatValue(value) {
   }
 
   return String(value)
+}
+
+function escapeTableValue(value) {
+  return String(value).replace(/\|/g, '\\|').replace(/\r?\n/g, ' ')
 }
 
 export default { revenueResponse }

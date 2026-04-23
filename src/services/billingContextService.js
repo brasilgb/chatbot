@@ -15,6 +15,10 @@ class BillingContextService {
       return 'Nenhum dado de faturamento encontrado.'
     }
 
+    if (billingItems.length > 1) {
+      return this.formatBillingTable(billingItems)
+    }
+
     const formatted = billingItems
       .map((item, index) => {
         const fields = Object.entries(item)
@@ -28,6 +32,31 @@ ${fields}`
       .join('\n---\n')
 
     return formatted
+  }
+
+  formatBillingTable(billingItems) {
+    const columns = Array.from(
+      billingItems.reduce((set, item) => {
+        Object.keys(item || {}).forEach((key) => set.add(key))
+        return set
+      }, new Set())
+    )
+    const header = `| ${columns.join(' | ')} |`
+    const separator = `| ${columns.map(() => '---').join(' | ')} |`
+    const rows = billingItems.map((item) => {
+      const values = columns.map((column) => {
+        const value = this.formatBillingValue(column, item[column])
+        return this.escapeTableValue(value)
+      })
+
+      return `| ${values.join(' | ')} |`
+    })
+
+    return [header, separator, ...rows].join('\n')
+  }
+
+  escapeTableValue(value) {
+    return String(value).replace(/\|/g, '\\|').replace(/\r?\n/g, ' ')
   }
 
   formatBillingValue(key, value) {
