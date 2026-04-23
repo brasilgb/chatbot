@@ -1,4 +1,5 @@
 import chatService from '../services/chatService.js'
+import { resolveDateRange } from '../services/chatbot/dateResolverService.js'
 
 export class ChatController {
   async health(req, res) {
@@ -35,11 +36,13 @@ export class ChatController {
         })
       }
 
+      const resolvedDate = date || resolveDateRange(message).startDate
+
       const result = await chatService.chat(
         message,
         history,
         includeBillingContext,
-        date
+        resolvedDate
       )
       console.log('Chat service returned:', result)
       console.log('About to send response')
@@ -69,11 +72,13 @@ export class ChatController {
       res.setHeader('Cache-Control', 'no-cache')
       res.setHeader('Connection', 'keep-alive')
 
+      const resolvedDate = req.body.date || resolveDateRange(message).startDate
+
       const stream = await chatService.streamChat(
         message,
         history,
         includeBillingContext,
-        req.body.date ?? null
+        resolvedDate
       )
       const reader = stream.getReader()
       const decoder = new TextDecoder()
