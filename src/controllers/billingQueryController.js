@@ -1,4 +1,5 @@
 import billingContextService from '../services/billingContextService.js'
+import { resolveDateRange } from '../services/chatbot/dateResolverService.js'
 
 /**
  * Controller para o endpoint /api/billing/query
@@ -24,10 +25,12 @@ export class BillingQueryController {
       }
 
       let result
+      const resolvedDate = date || resolveDateRange(question).startDate
+
       if (type === 'total') {
-        result = await billingContextService.getBillingResumeTotal(date)
+        result = await billingContextService.getBillingResumeTotal(resolvedDate)
       } else {
-        result = await billingContextService.getBillingResume(date)
+        result = await billingContextService.getBillingResume(resolvedDate)
       }
 
       if (!result.success) {

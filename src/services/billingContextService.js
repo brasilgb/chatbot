@@ -17,24 +17,29 @@ class BillingContextService {
 
     const formatted = billingItems
       .map((item, index) => {
-        const valor = item.FatuDia || item.fatuDia || item.VendaDia || item.valor || item.amount || 'N/A'
-        const descricao = item.Associacao || item.associacao || item.description || item.nome || `Associação ${item.Associacao || 'N/A'}`
-        const status = item.Atualizacao || item.atualizacao || item.status || 'N/A'
-        const dataRaw = item.DataChave || item.dataChave || item.data || 'N/A'
-        const data = this.formatBillingDate(dataRaw)
-        const margem = item.MargemDia || item.margemDia || item.MargemMes || item.margemMes || 'N/A'
+        const fields = Object.entries(item)
+          .map(([key, value]) => `${key}: ${this.formatBillingValue(key, value)}`)
+          .join('\n')
 
         return `
-Faturamento ${index + 1}:
-Associação: ${descricao}
-Valor do Dia: R$ ${valor}
-Margem: ${margem}
-Última Atualização: ${status}
-Data: ${data}`
+Registro ${index + 1}:
+${fields}`
       })
       .join('\n---\n')
 
     return formatted
+  }
+
+  formatBillingValue(key, value) {
+    if (value === null || value === undefined || value === '') {
+      return 'N/A'
+    }
+
+    if (/data/i.test(key)) {
+      return this.formatBillingDate(value)
+    }
+
+    return String(value)
   }
 
   formatBillingDate(dateValue) {

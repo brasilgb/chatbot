@@ -20,9 +20,13 @@ function toYYYYMMDD(dateValue) {
   return parsedDate.format('YYYYMMDD')
 }
 
+function isYYYYMMDD(dateValue) {
+  return /^\d{8}$/.test(String(dateValue || '').trim())
+}
+
 function todayYYYYMMDD() {
   return dayjs().format('YYYYMMDD')
 }
 
-export { toYYYYMMDD, todayYYYYMMDD }
-export default { toYYYYMMDD, todayYYYYMMDD }
+export { isYYYYMMDD, toYYYYMMDD, todayYYYYMMDD }
+export default { isYYYYMMDD, toYYYYMMDD, todayYYYYMMDD }

@@ -79,7 +79,12 @@ export class ChatbotController {
    */
   async chat(req, res) {
     try {
-      const { message, history = [], includeBillingContext = true } = req.body
+      const {
+        message,
+        history = [],
+        includeBillingContext = true,
+        date = null,
+      } = req.body
 
       if (!message || typeof message !== 'string') {
         return res.status(400).json({
@@ -88,7 +93,13 @@ export class ChatbotController {
         })
       }
 
-      const result = await chatService.chat(message, history, includeBillingContext)
+      const resolvedDate = date || resolveDateRange(message).startDate
+      const result = await chatService.chat(
+        message,
+        history,
+        includeBillingContext,
+        resolvedDate
+      )
       return res.json(result)
     } catch (error) {
       console.error('Erro no chat:', error)
