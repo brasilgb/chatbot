@@ -37,7 +37,9 @@ export class ChatbotController {
 
       if (intent === 'revenue') {
         // Construir query de faturamento
-        const revenueData = await buildRevenueQuery(period, billingContextService)
+        const revenueData = await buildRevenueQuery(period, billingContextService, {
+          message,
+        })
 
         if (!revenueData.success) {
           return res.status(500).json({

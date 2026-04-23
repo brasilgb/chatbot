@@ -13,8 +13,6 @@ export function revenueResponse(data, period) {
   let response = `Faturamento de ${period.displayName}:
 Total de registros: ${data.length}
 Total Geral: ${formatCurrency(total)}
-
-${data.length > 1 ? 'Detalhado por associacao:' : 'Detalhado:'}
 ${formatRecords(data)}`
 
   return response
@@ -22,32 +20,19 @@ ${formatRecords(data)}`
 
 function formatRecords(data) {
   if (data.length > 1) {
-    return formatAssociationTable(data)
+    return data
+      .map((item) => {
+        const associacao = getField(item, ['Associacao', 'associacao', 'nome'])
+        const valor = getField(item, ['FatuDia', 'VendaDia', 'ValorDia', 'Valor'])
+        return `${associacao}: ${formatCurrency(valor)}`
+      })
+      .join('\n')
   }
 
   const columns = getColumns(data)
   return columns
     .map((column) => `${column}: ${formatValue(column, data[0]?.[column])}`)
     .join('\n')
-}
-
-function formatAssociationTable(data) {
-  const columns = [
-    { key: 'Associacao', label: 'Assoc.', width: 8, align: 'left' },
-    { key: 'FatuDia', label: 'Fatu Dia', width: 15, align: 'right' },
-    { key: 'MargemDia', label: 'Mg Dia', width: 9, align: 'right' },
-    { key: 'FatuMes', label: 'Fatu Mes', width: 15, align: 'right' },
-    { key: 'MargemMes', label: 'Mg Mes', width: 9, align: 'right' },
-    { key: 'Atualizacao', label: 'Atualizacao', width: 19, align: 'left' },
-  ].filter((column) => data.some((item) => item?.[column.key] !== undefined))
-
-  const header = columns.map((column) => pad(column.label, column.width, column.align)).join(' | ')
-  const separator = columns.map((column) => '-'.repeat(column.width)).join('-+-')
-  const rows = data.map((item) => columns
-    .map((column) => pad(formatValue(column.key, item?.[column.key]), column.width, column.align))
-    .join(' | '))
-
-  return ['```text', header, separator, ...rows, '```'].join('\n')
 }
 
 function getColumns(data) {
@@ -143,16 +128,6 @@ function isCurrencyField(key) {
 
 function isPercentField(key) {
   return /(margem|rep|perf|atingido|parc)/i.test(key)
-}
-
-function pad(value, width, align = 'left') {
-  const text = String(value)
-
-  if (text.length > width) {
-    return text.slice(0, width - 1)
-  }
-
-  return align === 'right' ? text.padStart(width, ' ') : text.padEnd(width, ' ')
 }
 
 export default { revenueResponse }

@@ -49,7 +49,9 @@ export class ChatController {
       const intent = detectIntent(message)
 
       if (includeBillingContext && intent === 'revenue') {
-        const revenueData = await buildRevenueQuery(period, billingContextService)
+        const revenueData = await buildRevenueQuery(period, billingContextService, {
+          message,
+        })
 
         if (!revenueData.success) {
           return res.status(500).json({
@@ -110,7 +112,9 @@ export class ChatController {
       period.endDate = resolvedDate
 
       if (includeBillingContext && intent === 'revenue') {
-        const revenueData = await buildRevenueQuery(period, billingContextService)
+        const revenueData = await buildRevenueQuery(period, billingContextService, {
+          message,
+        })
 
         if (!revenueData.success) {
           res.write(`data: ${JSON.stringify({
