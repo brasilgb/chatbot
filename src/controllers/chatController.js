@@ -1,5 +1,11 @@
 import chatService from '../services/chatService.js'
-import { resolveDateRange } from '../services/chatbot/dateResolverService.js'
+import billingContextService from '../services/billingContextService.js'
+import {
+  buildRevenueQuery,
+  detectIntent,
+  resolveDateRange,
+  revenueResponse,
+} from '../services/chatbot/index.js'
 
 export class ChatController {
   async health(req, res) {
@@ -36,7 +42,32 @@ export class ChatController {
         })
       }
 
-      const resolvedDate = date || resolveDateRange(message).startDate
+      const period = resolveDateRange(message)
+      const resolvedDate = date || period.startDate
+      period.startDate = resolvedDate
+      period.endDate = resolvedDate
+      const intent = detectIntent(message)
+
+      if (includeBillingContext && intent === 'revenue') {
+        const revenueData = await buildRevenueQuery(period, billingContextService)
+
+        if (!revenueData.success) {
+          return res.status(500).json({
+            success: false,
+            error: 'Erro ao buscar dados de faturamento',
+          })
+        }
+
+        return res.json({
+          success: true,
+          reply: revenueResponse(revenueData.data, period),
+          model: null,
+          hasBillingData: true,
+          billingData: revenueData,
+          intent,
+          period,
+        })
+      }
 
       const result = await chatService.chat(
         message,
@@ -72,7 +103,34 @@ export class ChatController {
       res.setHeader('Cache-Control', 'no-cache')
       res.setHeader('Connection', 'keep-alive')
 
-      const resolvedDate = req.body.date || resolveDateRange(message).startDate
+      const period = resolveDateRange(message)
+      const intent = detectIntent(message)
+      const resolvedDate = req.body.date || period.startDate
+      period.startDate = resolvedDate
+      period.endDate = resolvedDate
+
+      if (includeBillingContext && intent === 'revenue') {
+        const revenueData = await buildRevenueQuery(period, billingContextService)
+
+        if (!revenueData.success) {
+          res.write(`data: ${JSON.stringify({
+            error: 'Erro ao buscar dados de faturamento',
+          })}\n\n`)
+          return res.end()
+        }
+
+        res.write(`data: ${JSON.stringify({
+          message: {
+            role: 'assistant',
+            content: revenueResponse(revenueData.data, period),
+          },
+          done: true,
+          billingData: revenueData,
+          intent,
+          period,
+        })}\n\n`)
+        return res.end()
+      }
 
       const stream = await chatService.streamChat(
         message,
