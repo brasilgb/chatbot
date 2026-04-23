@@ -9,41 +9,45 @@ export function revenueResponse(data, period) {
     'ValorDia',
     'Valor',
   ])), 0)
-  const formatter = new Intl.NumberFormat('pt-BR', {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  })
-  const columns = getColumns(data)
 
   let response = `Faturamento de ${period.displayName}:
 Total de registros: ${data.length}
-Total Geral: R$ ${formatter.format(total)}
+Total Geral: ${formatCurrency(total)}
 
-${data.length > 1 ? 'Detalhado em tabela:' : 'Detalhado por registro:'}
-${formatRecords(data, columns)}`
+${data.length > 1 ? 'Detalhado por associacao:' : 'Detalhado:'}
+${formatRecords(data)}`
 
   return response
 }
 
-function formatRecords(data, columns) {
+function formatRecords(data) {
   if (data.length > 1) {
-    return formatMarkdownTable(data, columns)
+    return formatAssociationTable(data)
   }
 
+  const columns = getColumns(data)
   return columns
-    .map((column) => `${column}: ${formatValue(data[0]?.[column])}`)
+    .map((column) => `${column}: ${formatValue(column, data[0]?.[column])}`)
     .join('\n')
 }
 
-function formatMarkdownTable(data, columns) {
-  const header = `| ${columns.join(' | ')} |`
-  const separator = `| ${columns.map(() => '---').join(' | ')} |`
-  const rows = data.map((item) => {
-    const values = columns.map((column) => escapeTableValue(formatValue(item[column])))
-    return `| ${values.join(' | ')} |`
-  })
+function formatAssociationTable(data) {
+  const columns = [
+    { key: 'Associacao', label: 'Assoc.', width: 8, align: 'left' },
+    { key: 'FatuDia', label: 'Fatu Dia', width: 15, align: 'right' },
+    { key: 'MargemDia', label: 'Mg Dia', width: 9, align: 'right' },
+    { key: 'FatuMes', label: 'Fatu Mes', width: 15, align: 'right' },
+    { key: 'MargemMes', label: 'Mg Mes', width: 9, align: 'right' },
+    { key: 'Atualizacao', label: 'Atualizacao', width: 19, align: 'left' },
+  ].filter((column) => data.some((item) => item?.[column.key] !== undefined))
 
-  return [header, separator, ...rows].join('\n')
+  const header = columns.map((column) => pad(column.label, column.width, column.align)).join(' | ')
+  const separator = columns.map((column) => '-'.repeat(column.width)).join('-+-')
+  const rows = data.map((item) => columns
+    .map((column) => pad(formatValue(column.key, item?.[column.key]), column.width, column.align))
+    .join(' | '))
+
+  return ['```text', header, separator, ...rows, '```'].join('\n')
 }
 
 function getColumns(data) {
@@ -99,16 +103,56 @@ function parseLocaleNumber(value) {
   return Number.isFinite(parsed) ? parsed : 0
 }
 
-function formatValue(value) {
+function formatValue(key, value) {
   if (value === null || value === undefined || value === '') {
     return 'N/A'
+  }
+
+  if (isCurrencyField(key)) {
+    return formatCurrency(value)
+  }
+
+  if (isPercentField(key)) {
+    return formatPercent(value)
   }
 
   return String(value)
 }
 
-function escapeTableValue(value) {
-  return String(value).replace(/\|/g, '\\|').replace(/\r?\n/g, ' ')
+function formatCurrency(value) {
+  return new Intl.NumberFormat('pt-BR', {
+    style: 'currency',
+    currency: 'BRL',
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(parseLocaleNumber(value)).replace(/\u00a0/g, ' ')
+}
+
+function formatPercent(value) {
+  const number = parseLocaleNumber(value)
+  return new Intl.NumberFormat('pt-BR', {
+    style: 'percent',
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(number)
+}
+
+function isCurrencyField(key) {
+  return /(fatu|venda|valor|meta|falta|juros|media)/i.test(key)
+}
+
+function isPercentField(key) {
+  return /(margem|rep|perf|atingido|parc)/i.test(key)
+}
+
+function pad(value, width, align = 'left') {
+  const text = String(value)
+
+  if (text.length > width) {
+    return text.slice(0, width - 1)
+  }
+
+  return align === 'right' ? text.padStart(width, ' ') : text.padEnd(width, ' ')
 }
 
 export default { revenueResponse }
