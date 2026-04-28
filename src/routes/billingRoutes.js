@@ -1,25 +1,9 @@
 import express from 'express'
 import billingQueryController from '../controllers/billingQueryController.js'
-import {
-  resumoFaturamento,
-  resumoFaturamentoTotal,
-} from '../controllers/solar/faturamento/resumoFaturamentoController.js'
 
-import faturamentoTotalGeral from '../controllers/solar/total-geral/faturamentoTotalGeralController.js'
+import {faturamentoTotalGeral} from '../controllers/solar/total-geral/faturamentoTotalGeralController.js'
 
 const router = express.Router()
-
-/**
- * GET /api/billing/resumo-faturamento?data=YYYY-MM-DD
- * Busca resumo de faturamento para uma data específica
- */
-router.get('/resumo-faturamento', resumoFaturamento)
-
-/**
- * GET /api/billing/resumo-faturamento-total?data=YYYY-MM-DD
- * Busca resumo total de faturamento para uma data específica
- */
-router.get('/resumo-faturamento-total', resumoFaturamentoTotal)
 
 /**
  * GET /api/billing/resumo-faturamento-total?data=YYYY-MM-DD
