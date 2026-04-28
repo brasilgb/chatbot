@@ -1,4 +1,7 @@
 import dayjs from 'dayjs'
+import customParseFormat from 'dayjs/plugin/customParseFormat.js'
+
+dayjs.extend(customParseFormat)
 
 function toYYYYMMDD(dateValue) {
   if (!dateValue) {
@@ -11,7 +14,12 @@ function toYYYYMMDD(dateValue) {
     return raw
   }
 
-  const parsedDate = dayjs(raw)
+  // Tenta converter de DD/MM/YYYY para objeto dayjs primeiro
+  let parsedDate = dayjs(raw, 'DD/MM/YYYY', true)
+
+  if (!parsedDate.isValid()) {
+    parsedDate = dayjs(raw)
+  }
 
   if (!parsedDate.isValid()) {
     throw new Error(`Data inválida: ${raw}`)

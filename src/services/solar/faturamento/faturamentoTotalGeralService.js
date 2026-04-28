@@ -35,6 +35,7 @@ import { normalizeBidata } from '../responseUtils.js'
 
 async function execute(data) {
   const dataYYYYMMDD = toYYYYMMDD(data)
+  console.log(`Calling (LOJ_FATU_TOTAL) with date: ${dataYYYYMMDD}`)
 
   const response = await postComSessao('(LOJ_FATU_TOTAL)', {
     datalojfatutotal: dataYYYYMMDD,
