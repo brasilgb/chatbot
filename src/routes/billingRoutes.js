@@ -1,7 +1,7 @@
 import express from 'express'
 import billingQueryController from '../controllers/billingQueryController.js'
 
-import {faturamentoTotalGeral} from '../controllers/solar/total-geral/faturamentoTotalGeralController.js'
+import {faturamentoTotalGeral} from '../controllers/solar/faturamento/faturamentoTotalGeralController.js'
 
 const router = express.Router()
 

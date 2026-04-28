@@ -51,7 +51,12 @@ function isTotalRevenueQuestion(message = '') {
 
 function isAssociationQuestion(message = '') {
   const lowerMessage = String(message).toLowerCase()
-  return lowerMessage.includes('associação') || lowerMessage.includes('associacao')
+  return (
+    lowerMessage.includes('associação') ||
+    lowerMessage.includes('associacao') ||
+    lowerMessage.includes('departamento') ||
+    lowerMessage.includes('filial')
+  )
 }
 
 function filterByAssociation(data, message = '') {
@@ -64,15 +69,16 @@ function filterByAssociation(data, message = '') {
     return data
   }
 
-  return data.filter((item) =>
-    normalizeText(item?.Associacao) === requestedAssociation
-  )
+  return data.filter((item) => {
+    const value = item?.Associacao || item?.Departamento
+    return normalizeText(value) === requestedAssociation
+  })
 }
 
 function findRequestedAssociation(data, message) {
   const normalizedMessage = normalizeText(message)
   const associations = data
-    .map((item) => normalizeText(item?.Associacao))
+    .map((item) => normalizeText(item?.Associacao || item?.Departamento))
     .filter(Boolean)
     .sort((a, b) => b.length - a.length)
 

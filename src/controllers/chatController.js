@@ -47,8 +47,12 @@ export class ChatController {
       period.startDate = resolvedDate
       period.endDate = resolvedDate
       const intent = detectIntent(message)
+      const intentName = intent.intent
 
-      if (includeBillingContext && intent === 'revenue') {
+      // Se quiser uma resposta direta e formatada (bypass LLM)
+      const forceDirectResponse = req.body.direct === true
+
+      if (includeBillingContext && intentName === 'revenue' && forceDirectResponse) {
         const revenueData = await buildRevenueQuery(period, billingContextService, {
           message,
         })
@@ -107,11 +111,14 @@ export class ChatController {
 
       const period = resolveDateRange(message)
       const intent = detectIntent(message)
+      const intentName = intent.intent
+      const forceDirectResponse = req.body.direct === true
+
       const resolvedDate = req.body.date || period.startDate
       period.startDate = resolvedDate
       period.endDate = resolvedDate
 
-      if (includeBillingContext && intent === 'revenue') {
+      if (includeBillingContext && intentName === 'revenue' && forceDirectResponse) {
         const revenueData = await buildRevenueQuery(period, billingContextService, {
           message,
         })

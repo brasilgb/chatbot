@@ -4,6 +4,7 @@ export function revenueResponse(data, period) {
   }
 
   const total = data.reduce((sum, item) => sum + parseLocaleNumber(getField(item, [
+    'Faturamento',
     'FatuDia',
     'VendaDia',
     'ValorDia',
@@ -22,8 +23,8 @@ function formatRecords(data) {
   if (data.length > 1) {
     return data
       .map((item) => {
-        const associacao = getField(item, ['Associacao', 'associacao', 'nome'])
-        const valor = getField(item, ['FatuDia', 'VendaDia', 'ValorDia', 'Valor'])
+        const associacao = getField(item, ['Associacao', 'Departamento', 'associacao', 'nome'])
+        const valor = getField(item, ['Faturamento', 'FatuDia', 'VendaDia', 'ValorDia', 'Valor'])
         return `${associacao}: ${formatCurrency(valor)}`
       })
       .join('\n')
@@ -38,13 +39,15 @@ function formatRecords(data) {
 function getColumns(data) {
   const preferredColumns = [
     'Associacao',
+    'Departamento',
     'DataChave',
+    'Faturamento',
+    'Meta',
+    'MetaAlcancada',
+    'Margem',
+    'Projecao',
     'FatuDia',
-    'FatuMes',
     'VendaDia',
-    'VendaMes',
-    'MargemDia',
-    'MargemMes',
     'Atualizacao',
   ]
   const allColumns = Array.from(
