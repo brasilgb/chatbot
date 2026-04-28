@@ -151,18 +151,27 @@ export class ChatController {
       )
       const reader = stream.getReader()
       const decoder = new TextDecoder()
+      let buffer = ''
 
       try {
         while (true) {
           const { done, value } = await reader.read()
-          if (done) break
+          if (done) {
+            if (buffer.trim()) {
+              res.write(`data: ${buffer.trim()}\n\n`)
+            }
+            break
+          }
 
-          const text = decoder.decode(value)
-          const lines = text.split('\n').filter(line => line.trim())
+          buffer += decoder.decode(value, { stream: true })
+          const lines = buffer.split('\n')
+          
+          buffer = lines.pop()
 
           for (const line of lines) {
-            if (line) {
-              res.write(`data: ${line}\n\n`)
+            const trimmedLine = line.trim()
+            if (trimmedLine) {
+              res.write(`data: ${trimmedLine}\n\n`)
             }
           }
         }
